@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  ###########################################################
+  ##                        DATABASE                       ##
+  ###########################################################
+
+  ## ORACLE-XE ##
+  oracle:
+    image: gvenzl/oracle-xe:18.4.0-slim
+    hostname: oracle
+    container_name: oracle
+    environment:
+      ORACLE_PASSWORD: '0NC3'
+    ports:
+      - 1521:1521
+    networks:
+      - development
+    healthcheck:
+      test: sql -L -S sys/0NC3@localhost:1521/XEPDB1 as sysdba < /dev/null |grep 'ORA-'; if [[ $$? == 1 ]]; then echo 0; else echo 1; fi
+      interval: 1m
+      timeout: 10s
+      retries: 20
+      start_period: 40s
+
+volumes:
+  oradata:
+    driver: local
+    driver_opts:
+      type: none
+      device: $PWD/oradata
+      o: bind
+  prometheus_data: { }
+
+networks:
+  development:
+    name: custom-network
